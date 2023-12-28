@@ -20,3 +20,24 @@ class MyKNNClf:
         self.X = X
         self.y = y
         self.train_size = X.shape
+
+    def predict(self, X):
+        result = np.zeros(len(X))
+        for j in range(len(X)):
+            distances = np.zeros(self.train_size)
+            for i in range(len(self.X)):
+                distances[i] = self.calc_metric(X[j], self.X[i])
+            indices_of_nearest = np.argpartition(distances, self.k)[:self.k]
+            fashion = 1 if np.mean(self.y[indices_of_nearest]) >= 0.5 else 0
+            result[j] = fashion
+        return result
+
+
+    def predict_proba(self, X):
+        pass
+
+    def calc_metric(self, x1, x2):
+        sum = 0
+        for i in range(len(x1)):
+            sum += (x1 - x2) ** 2
+        return sum ** 0.5
