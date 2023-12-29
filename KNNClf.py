@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from numpy.linalg import norm
 import random
 from typing import Union, NoReturn, Dict, Callable
 
@@ -45,7 +46,35 @@ class MyKNNClf:
         return result
 
     def calc_metric(self, x1: pd.Series, x2: pd.Series) -> float:
-        sum = 0
-        for i in range(len(x1)):
-            sum += (x1.iloc[i] - x2.iloc[i]) ** 2
-        return sum ** 0.5
+        def euclidean(x1: pd.Series, x2: pd.Series):
+            result = 0
+            for i in range(len(x1)):
+                result += (x1.iloc[i] - x2.iloc[i]) ** 2
+            return result ** 0.5
+
+        def manhattan(x1: pd.Series, x2: pd.Series):
+            result = 0
+            for i in range(len(x1)):
+                result += abs(x1.iloc[i] - x2.iloc[i])
+            return result
+
+        def chebyshev(x1: pd.Series, x2: pd.Series):
+            result = float("-inf")
+            for i in range(len(x1)):
+                result = max(result, abs(x1.iloc[i] - x2.iloc[i]))
+            return result
+
+        def cosine(x1: pd.Series, x2: pd.Series):
+            dot = x1.dot(x2)
+            norm1 = norm(x1)
+            norm2 = norm(x2)
+            similarity = dot / (norm1 * norm2)
+            return 1 - similarity
+        if self.metric == "euclidean":
+            return euclidean(x1, x2)
+        if self.metric == "manhattan":
+            return manhattan(x1, x2)
+        if self.metric == "chebyshev":
+            return chebyshev(x1, x2)
+        if self.metric == "cosine":
+            return cosine(x1, x2)
