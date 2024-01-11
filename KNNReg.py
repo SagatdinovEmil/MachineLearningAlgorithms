@@ -5,12 +5,13 @@ import random
 from typing import Union, NoReturn, Dict, Callable
 
 class MyKNNReg:
-    def __init__(self, k: int = 3, metric: str = "euclidean"):
+    def __init__(self, k: int = 3, metric: str = "euclidean", weight: str = "uniform"):
         self.k: int = k
         self.train_size: tuple
         self.X: pd.DataFrame
         self.y: pd.Series
         self.metric: str = metric
+        self.weight: str = weight
 
     def __str__(self):
         return f"MyKNNReg class: k={self.k}"
@@ -33,8 +34,20 @@ class MyKNNReg:
             indices_of_nearest = indices_of_nearest[np.argsort(distances[indices_of_nearest])]
             distances = distances[indices_of_nearest]
             nearest_y = self.y[indices_of_nearest]
-            result[i] = np.mean(nearest_y)
+            if self.weight == "uniform":
+                result[i] = np.mean(nearest_y)
+            else:
+                weights = np.zeros(self.k)
+                if self.weight == "rank":
+                    rank_weights = 1 / np.arange(1, self.k + 1)
+                    weights = rank_weights / np.sum(rank_weights)
+                elif self.weight == "distance":
+                    inv_distances = 1 / distances
+                    sum_inv_distances = np.sum(inv_distances)
+                    weights = inv_distances / sum_inv_distances
+                result[i] = np.dot(weights, nearest_y)
         return result
+
 
     def calc_metric(self, x1: pd.Series, x2: pd.Series) -> float:
         def euclidean(x1: pd.Series, x2: pd.Series):
